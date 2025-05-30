@@ -1,0 +1,42 @@
+pipeline {
+    agent any // Or specify a specific agent label
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout code from your GitHub repository
+                git url: 'https://github.com/devops-ds/your-gradle-project.git', branch: 'main' // Corrected URL
+                // If your repository is private, you'll need to add credentials here, e.g.:
+                // git url: 'https://github.com/devops-ds/your-gradle-project.git', branch: 'main', credentialsId: 'your-credential-id'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                // Run Gradle build using the wrapper
+                sh './gradlew clean build'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                // Run tests (if not already run in the build stage)
+                // This step is often not strictly necessary if './gradlew clean build' already runs tests
+                sh './gradlew test'
+            }
+        }
+    }
+    post {
+        always {
+            // Archive test reports (modify the path according to your project structure)
+            junit '**/build/test-results/test/*.xml'
+        }
+        success {
+            echo 'Build and tests succeeded!'
+        }
+        failure {
+            echo 'Build or tests failed.'
+        }
+        // Add other post conditions like 'unstable', 'changed' as needed
+    }
+}
